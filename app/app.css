@@ -7,9 +7,86 @@
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-white;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
+.ruler {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 100vh;
+  background: rgba(255, 0, 0, 0.2);
+  border: 1px solid red;
+  writing-mode: vertical-lr;
+  text-orientation: upright;
+  text-align: center;
+  line-height: 18px;
+  color: rgba(100, 0, 0, 0.5);
+}
+
+@keyframes push-move-out-left {
+  from {
+    transform: translateX(0%);
+  }
+
+  to {
+    transform: translateX(-50%);
   }
 }
+
+@keyframes push-move-in-from-right {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0%);
+  }
+}
+
+/* pop transition */
+
+@keyframes pop-move-out-right {
+  from {
+    transform: translateX(0%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pop-move-in-from-left {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0%);
+  }
+}
+::view-transition-group(*),
+::view-transition-new(*),
+::view-transition-old(*) {
+  animation-name: none;
+}
+
+::view-transition-new(page-default-forward) {
+  animation: 0.25s ease-in-out both push-move-in-from-right;
+}
+::view-transition-old(page-default-forward) {
+  animation: 0.25s ease-in-out both push-move-out-left;
+}
+
+::view-transition-new(page-default-backward) {
+  animation: 0.25s ease-in-out both pop-move-in-from-left;
+  z-index: 1;
+}
+::view-transition-old(page-default-backward) {
+  animation: 0.25s ease-in-out both pop-move-out-right;
+  z-index: 2;
+}
+
+/*https://github.com/WICG/view-transitions/blob/main/default-ua-transitions.md#choosing-between-ua-and-custom-transition*/
+@same-document-ua-transition: disable-atomic;
