@@ -24,6 +24,17 @@ body {
   line-height: 18px;
   color: rgba(100, 0, 0, 0.5);
 }
+.scrollRestoration {
+  top: 0;
+  right: 0;
+  height: 28px;
+  width: 100vw;
+  background: rgba(0, 94, 168, 0.2);
+  border: 1px solid #005ea8;
+  text-align: center;
+  line-height: 24px;
+  color: rgba(0, 94, 168, 0.5);
+}
 
 @keyframes push-move-out-left {
   from {

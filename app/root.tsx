@@ -28,24 +28,13 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export const clientLoader = async ({ request }: Route.ClientLoaderArgs) => {
-  const cookie =
-    (await scrollRestorationCookie.parse(request.headers.get("Cookie"))) ??
-    "auto";
-  const scrollRestorationParam =
-    new URL(request.url).searchParams.get("scrollRestoration") ?? cookie;
-  const scrollRestoration: typeof history.scrollRestoration =
+  const scrollRestorationParam = new URL(request.url).searchParams.get("scrollRestoration");
+  const scrollRestoration: typeof history.scrollRestoration|undefined =
     scrollRestorationParam === "auto" || scrollRestorationParam === "manual"
     ? scrollRestorationParam
-    : "auto";
+    : undefined;
   return data(
-    { scrollRestoration },
-    {
-      headers: {
-        "Set-Cookie": await scrollRestorationCookie.serialize(
-          scrollRestoration
-        ),
-      },
-    }
+    { scrollRestoration }
   );
 };
 
@@ -53,18 +42,20 @@ export const clientLoader = async ({ request }: Route.ClientLoaderArgs) => {
   return loaderHeaders;
 }*/
 
-let scrollRestoration: typeof history.scrollRestoration = "auto";
+const scrollRestoration: typeof history.scrollRestoration = "auto";
 
 const TransitionContext = React.createContext<({ setTransition: (transition: string) => void; transition: string }) | null>(null);
 
 export const useTransitionContext = () => useContext(TransitionContext);
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const data = useRouteLoaderData<typeof loader>("root");
+  const data = useRouteLoaderData<typeof clientLoader>("root");
+  const scrollRestorationRef = useRef<typeof history.scrollRestoration>(data?.scrollRestoration || scrollRestoration);
+
   useEffect(() => {
-    const value = data?.scrollRestoration ?? scrollRestoration;
-    history.scrollRestoration = value;
-    scrollRestoration = value;
+    if (data?.scrollRestoration !== undefined && data?.scrollRestoration !== scrollRestorationRef.current) {
+      scrollRestorationRef.current = data?.scrollRestoration ?? "auto";
+    }
   }, [data?.scrollRestoration]);
 
   const location = useLocation();
@@ -118,6 +109,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
     transitionRef.current = value;
   }
 
+  useEffect(() => {
+    history.scrollRestoration = "auto";
+  }, [location]);
+
   return (
     <html lang="en" ref={htmlElementRef}>
       <head>
@@ -130,8 +125,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <TransitionContextProvider handler={setTransition}>
         {children}
       </TransitionContextProvider>
-      {scrollRestoration === "manual" ? <ScrollRestoration/> : null}
-        <Scripts />
+      <ScrollRestoration />
+      {/*{scrollRestorationRef.current === "manual" ? <ScrollRestoration/> : null}*/}
+      <Scripts />
       </body>
     </html>
   );
@@ -142,6 +138,7 @@ export default function App() {
     <>
       <div className="ruler">100vh marker</div>
       <Outlet/>
+      <div className="scrollRestoration">scrollRestoration: "{window.history.scrollRestoration}"</div>
     </>);
 }
 

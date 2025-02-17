@@ -28,8 +28,7 @@ function lockBody() {
   }
 
   // Get the width of the scrollbar
-  const scrollbarWidth =
-    window.innerWidth - document.documentElement.clientWidth;
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
   // Apply the styles to the body
   body.style.setProperty("overflow", "hidden", "important");

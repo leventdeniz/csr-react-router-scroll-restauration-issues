@@ -12,12 +12,18 @@ export const TransitionLink = ({ children, onClick, to, viewTransition: viewTran
     if (context === null || !Boolean(document.startViewTransition) || !viewTransitionProp) {
       return;
     }
+    e.preventDefault();
     context.setTransition('page-default-forward');
+    const transition = document.startViewTransition(() => linkHandler(e));
+    transition.finished.finally(() => {
+      // context.setTransition('');
+      // window.scroll(0, 0);
+    });
   };
-
+/*
   useEffect(() => {
     console.log({ foo });
-  }, [foo]);
+  }, [foo]);*/
 
   return (
     <Link
