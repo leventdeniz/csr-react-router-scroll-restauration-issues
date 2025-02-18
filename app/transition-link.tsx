@@ -43,6 +43,6 @@ export const TransitionLink = ({ children, onClick, to, viewTransition: viewTran
       onClick={onForwardNavigation}
     >
       {children}
-      <span className="text-xs">vt: {withViewTransition ? 'true' : 'false'}</span>
+      {/*<span className="text-xs">vt: {withViewTransition ? 'true' : 'false'}</span>*/}
     </Link>);
 };
