@@ -13,7 +13,6 @@ export const TransitionLink = ({ children, onClick, to, viewTransition: viewTran
 
   const onForwardNavigation = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    console.log({context, withViewTransition});
     if (/*context === null || */!withViewTransition) {
       linkHandler(e);
       return;
@@ -32,7 +31,6 @@ export const TransitionLink = ({ children, onClick, to, viewTransition: viewTran
   }, [foo]);*/
 
   useEffect(() => {
-    console.log("ref: ", context?.hasUAVisualTransitionRef);
     setWithViewTransition(viewTransitionProp && !context?.hasUAVisualTransitionRef && Boolean(document.startViewTransition));
   }, [viewTransitionProp, context?.hasUAVisualTransitionRef]);
 

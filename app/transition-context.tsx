@@ -17,7 +17,7 @@ const TransitionContextProvider = ({ children, handler }:{ children: React.React
   const location = useLocation();
 
   const setTransition = (value: string) => {
-    console.log('setTransition', value);
+    // console.log('setTransition', value);
     handler(value);
     // transitionRef.current = value;
   }
@@ -29,13 +29,13 @@ const TransitionContextProvider = ({ children, handler }:{ children: React.React
 
   useLayoutEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      console.log('event.hasUAVisualTransition: ', event.hasUAVisualTransition);
+      // console.log('event.hasUAVisualTransition: ', event.hasUAVisualTransition);
       // hasUAVisualTransitionRef.current = event.hasUAVisualTransition;
       setHasUAVisualTransition(event.hasUAVisualTransition)
       setTimeout(() => {
-        console.log('setHasUAVisualTransitionRef(false)');
+        // console.log('setHasUAVisualTransitionRef(false)');
         setHasUAVisualTransitionRef(false);
-      }, 200);
+      }, 100);
     }
     window.addEventListener('popstate', handlePopState);
 

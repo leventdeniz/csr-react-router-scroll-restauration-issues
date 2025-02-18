@@ -35,7 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [location]);
 
   const setTransition = (value: string) => {
-    console.log('setTransition', value);
+    // console.log('setTransition', value);
     if (transitionRef.current) {
       htmlElementRef.current?.style.removeProperty("view-transition-name");
     }
