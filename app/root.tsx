@@ -1,17 +1,15 @@
 import {
-  data,
   isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   Scripts,
-  ScrollRestoration, useLocation, useRouteLoaderData,
+  useLocation,
 } from 'react-router';
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { scrollRestorationCookie } from '~/cookies';
-import React, { useContext, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import TransitionContextProvider from '~/transition-context';
 
 export const links: Route.LinksFunction = () => [
@@ -27,77 +25,13 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export const clientLoader = async ({ request }: Route.ClientLoaderArgs) => {
-  const scrollRestorationParam = new URL(request.url).searchParams.get("scrollRestoration");
-  const scrollRestoration: typeof history.scrollRestoration|undefined =
-    scrollRestorationParam === "auto" || scrollRestorationParam === "manual"
-    ? scrollRestorationParam
-    : undefined;
-  return data(
-    { scrollRestoration }
-  );
-};
-
-/*export function headers({ loaderHeaders }: Route.HeadersArgs) {
-  return loaderHeaders;
-}*/
-
-const scrollRestoration: typeof history.scrollRestoration = "auto";
-
-const TransitionContext = React.createContext<({ setTransition: (transition: string) => void; transition: string }) | null>(null);
-
-export const useTransitionContext = () => useContext(TransitionContext);
-
 export function Layout({ children }: { children: React.ReactNode }) {
-  const data = useRouteLoaderData<typeof clientLoader>("root");
-  const scrollRestorationRef = useRef<typeof history.scrollRestoration>(data?.scrollRestoration || scrollRestoration);
-
-  useEffect(() => {
-    if (data?.scrollRestoration !== undefined && data?.scrollRestoration !== scrollRestorationRef.current) {
-      scrollRestorationRef.current = data?.scrollRestoration ?? "auto";
-    }
-  }, [data?.scrollRestoration]);
-
   const location = useLocation();
-  const currentIndex = useRef(0); // Track the current index
   const transitionRef = useRef('');
   const htmlElementRef = useRef<HTMLHtmlElement>(null);
 
-  useLayoutEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const newIndex = event.state?.idx || 0;
-
-      if (transitionRef.current) {
-        htmlElementRef.current?.style.removeProperty("view-transition-name");
-      }
-      if (event.hasUAVisualTransition) {
-        console.log('UA visual transition');
-        transitionRef.current = '';
-        htmlElementRef.current?.style.removeProperty("view-transition-name");
-      } else {
-        if (newIndex < currentIndex.current) {
-          console.log('Back navigation');
-          transitionRef.current = 'page-default-backward';
-        } else if (newIndex > currentIndex.current) {
-          console.log('Forward navigation');
-          transitionRef.current = 'page-default-forward';
-        }
-        htmlElementRef.current?.style.setProperty("view-transition-name", transitionRef.current);
-      }
-
-      // Update the current index
-      currentIndex.current = newIndex;
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [location]);
-
-  useLayoutEffect(() => {
-    currentIndex.current = history.state?.idx || 0;
+  useEffect(() => {
+    history.scrollRestoration = "auto";
   }, [location]);
 
   const setTransition = (value: string) => {
@@ -108,10 +42,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     htmlElementRef.current?.style.setProperty("view-transition-name", value);
     transitionRef.current = value;
   }
-
-  useEffect(() => {
-    history.scrollRestoration = "auto";
-  }, [location]);
 
   return (
     <html lang="en" ref={htmlElementRef}>
@@ -125,7 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <TransitionContextProvider handler={setTransition}>
         {children}
       </TransitionContextProvider>
-      <ScrollRestoration />
+      {/*<ScrollRestoration />*/}
       {/*{scrollRestorationRef.current === "manual" ? <ScrollRestoration/> : null}*/}
       <Scripts />
       </body>

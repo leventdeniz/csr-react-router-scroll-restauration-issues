@@ -1,23 +1,29 @@
 import { Link, type LinkProps, useLinkClickHandler, useLocation, useNavigate, useViewTransitionState } from 'react-router';
 import { useTransitionContext } from '~/transition-context';
-import { type MouseEvent, useEffect, useLayoutEffect, useRef } from 'react';
+import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 export const TransitionLink = ({ children, onClick, to, viewTransition: viewTransitionProp, ...props }: LinkProps) => {
   const context = useTransitionContext();
-  const foo = useViewTransitionState(to);
-  const navigate = useNavigate();
-  const linkHandler = useLinkClickHandler(to, { viewTransition: viewTransitionProp && !context?.hasUAVisualTransitionRef });
+  const [withViewTransition, setWithViewTransition] = useState(
+    viewTransitionProp && !context?.hasUAVisualTransitionRef && Boolean(document.startViewTransition)
+  );
+  const linkHandler = useLinkClickHandler(to, {
+    viewTransition: false
+  });
 
   const onForwardNavigation = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (context === null || !Boolean(document.startViewTransition) || !viewTransitionProp) {
+    e.preventDefault();
+    console.log({context, withViewTransition});
+    if (/*context === null || */!withViewTransition) {
+      linkHandler(e);
       return;
     }
-    e.preventDefault();
-    context.setTransition('page-default-forward');
-    const transition = document.startViewTransition(() => linkHandler(e));
-    transition.finished.finally(() => {
-      // context.setTransition('');
-      // window.scroll(0, 0);
+    context?.setTransition('page-default-forward');
+    document.startViewTransition(() => {
+      linkHandler(e);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      })
     });
   };
 /*
@@ -25,13 +31,18 @@ export const TransitionLink = ({ children, onClick, to, viewTransition: viewTran
     console.log({ foo });
   }, [foo]);*/
 
+  useEffect(() => {
+    console.log("ref: ", context?.hasUAVisualTransitionRef);
+    setWithViewTransition(viewTransitionProp && !context?.hasUAVisualTransitionRef && Boolean(document.startViewTransition));
+  }, [viewTransitionProp, context?.hasUAVisualTransitionRef]);
+
   return (
     <Link
       to={to}
       {...props}
       onClick={onForwardNavigation}
-      viewTransition={viewTransitionProp && !context?.hasUAVisualTransitionRef}
     >
       {children}
+      <span className="text-xs">vt: {withViewTransition ? 'true' : 'false'}</span>
     </Link>);
 };
