@@ -3,7 +3,7 @@ import {
   Links,
   Meta,
   Outlet,
-  Scripts,
+  Scripts, ScrollRestoration,
   useLocation,
 } from 'react-router';
 
@@ -30,6 +30,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const currentIndex = useRef(0); // Track the current index
   const transitionRef = useRef('');
   const htmlElementRef = useRef<HTMLHtmlElement>(null);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
   useLayoutEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -38,7 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       if (transitionRef.current) {
         htmlElementRef.current?.style.removeProperty("view-transition-name");
       }
-      if (event.hasUAVisualTransition) {
+      if (event.hasUAVisualTransition || isSafari) {
         console.log('UA visual transition');
         transitionRef.current = '';
         htmlElementRef.current?.style.removeProperty("view-transition-name");
@@ -46,13 +47,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         if (newIndex < currentIndex.current) {
           console.log('Back navigation');
           transitionRef.current = 'page-default-backward';
-          document.startViewTransition();
         } else if (newIndex > currentIndex.current) {
           console.log('Forward navigation');
           transitionRef.current = 'page-default-forward';
-          document.startViewTransition();
         }
         htmlElementRef.current?.style.setProperty("view-transition-name", transitionRef.current);
+        document.startViewTransition();
       }
 
       // Update the current index
@@ -71,11 +71,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [location]);
 
   useEffect(() => {
-    history.scrollRestoration = "auto";
+    history.scrollRestoration = isSafari ? "auto" : 'manual';
   }, [location]);
 
   const setTransition = (value: string) => {
-    // console.log('setTransition', value);
     if (transitionRef.current) {
       htmlElementRef.current?.style.removeProperty("view-transition-name");
     }
@@ -95,8 +94,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <TransitionContextProvider handler={setTransition}>
         {children}
       </TransitionContextProvider>
-      {/*<ScrollRestoration />*/}
-      {/*{scrollRestorationRef.current === "manual" ? <ScrollRestoration/> : null}*/}
+      {isSafari ? null : <ScrollRestoration />}
       <Scripts />
       </body>
     </html>

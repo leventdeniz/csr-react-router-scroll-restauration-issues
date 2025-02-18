@@ -12,28 +12,21 @@ export const useTransitionContext = () => useContext(TransitionContext);
 
 const TransitionContextProvider = ({ children, handler }:{ children: React.ReactNode; handler: (value: string) => void}) => {
   const transitionRef = useRef('');
-  const hasUAVisualTransitionRef = useRef(false);
   const [hasUAVisualTransition, setHasUAVisualTransition] = useState(false);
   const location = useLocation();
 
   const setTransition = (value: string) => {
-    // console.log('setTransition', value);
     handler(value);
-    // transitionRef.current = value;
   }
 
   const setHasUAVisualTransitionRef = (value: boolean) => {
-    // hasUAVisualTransitionRef.current = value;
     setHasUAVisualTransition(value);
   };
 
   useLayoutEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      // console.log('event.hasUAVisualTransition: ', event.hasUAVisualTransition);
-      // hasUAVisualTransitionRef.current = event.hasUAVisualTransition;
       setHasUAVisualTransition(event.hasUAVisualTransition)
       setTimeout(() => {
-        // console.log('setHasUAVisualTransitionRef(false)');
         setHasUAVisualTransitionRef(false);
       }, 100);
     }
