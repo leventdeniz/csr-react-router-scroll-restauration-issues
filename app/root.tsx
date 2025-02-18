@@ -44,11 +44,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         htmlElementRef.current?.style.removeProperty("view-transition-name");
       } else {
         if (newIndex < currentIndex.current) {
-          console.log('Back navigation - document.startViewTransition();');
+          console.log('Back navigation');
           transitionRef.current = 'page-default-backward';
           document.startViewTransition();
         } else if (newIndex > currentIndex.current) {
-          console.log('Forward navigation - document.startViewTransition();');
+          console.log('Forward navigation');
           transitionRef.current = 'page-default-forward';
           document.startViewTransition();
         }
