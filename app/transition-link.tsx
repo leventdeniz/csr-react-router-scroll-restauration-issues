@@ -21,11 +21,11 @@ export const TransitionLink = ({ children, onClick, to, viewTransition: viewTran
     context?.setTransition('page-default-forward');
     document.startViewTransition(() => {
       linkHandler(e);
-      if (isSafari) {
-        requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (isSafari) {
           window.scrollTo(0, 0);
-        })
-      }
+        }
+      })
     });
   };
 
@@ -38,6 +38,7 @@ export const TransitionLink = ({ children, onClick, to, viewTransition: viewTran
       to={to}
       {...props}
       onClick={onForwardNavigation}
+      prefetch={"viewport"}
     >
       {children}
     </Link>);
