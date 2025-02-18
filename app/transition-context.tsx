@@ -10,7 +10,7 @@ export const TransitionContext = React.createContext<({
 
 export const useTransitionContext = () => useContext(TransitionContext);
 
-const TransitionContextProvider = ({ children, handler }:{ children: React.ReactNode}) => {
+const TransitionContextProvider = ({ children, handler }:{ children: React.ReactNode; handler: (value: string) => void}) => {
   const transitionRef = useRef('');
   const hasUAVisualTransitionRef = useRef(false);
   const [hasUAVisualTransition, setHasUAVisualTransition] = useState(false);

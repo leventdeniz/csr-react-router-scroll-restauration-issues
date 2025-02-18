@@ -9,7 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import TransitionContextProvider from '~/transition-context';
 
 export const links: Route.LinksFunction = () => [
@@ -27,8 +27,48 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const currentIndex = useRef(0); // Track the current index
   const transitionRef = useRef('');
   const htmlElementRef = useRef<HTMLHtmlElement>(null);
+
+  useLayoutEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const newIndex = event.state?.idx || 0;
+
+      if (transitionRef.current) {
+        htmlElementRef.current?.style.removeProperty("view-transition-name");
+      }
+      if (event.hasUAVisualTransition) {
+        console.log('UA visual transition');
+        transitionRef.current = '';
+        htmlElementRef.current?.style.removeProperty("view-transition-name");
+      } else {
+        if (newIndex < currentIndex.current) {
+          console.log('Back navigation');
+          transitionRef.current = 'page-default-backward';
+          document.startViewTransition();
+        } else if (newIndex > currentIndex.current) {
+          console.log('Forward navigation');
+          transitionRef.current = 'page-default-forward';
+          document.startViewTransition();
+        }
+        htmlElementRef.current?.style.setProperty("view-transition-name", transitionRef.current);
+      }
+
+      // Update the current index
+      currentIndex.current = newIndex;
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [location]);
+
+  useLayoutEffect(() => {
+    currentIndex.current = history.state?.idx || 0;
+  }, [location]);
 
   useEffect(() => {
     history.scrollRestoration = "auto";
