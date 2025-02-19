@@ -20,9 +20,9 @@ export default function Step2() {
                   viewTransition
                   className="size-full flex justify-center items-center text-7xl"
                 >
-                  <span className="text-lg text-gray-500">zurück zu </span>
+                  <span className="text-lg text-gray-200">zurück zu </span>
                   2
-                  <span className="text-lg text-gray-500">{i + 1}</span>
+                  <span className="text-lg text-gray-200">{i + 1}</span>
                 </TransitionLink>
               </li>
             );

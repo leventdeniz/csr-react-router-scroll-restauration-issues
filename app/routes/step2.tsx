@@ -8,7 +8,7 @@ export const clientLoader = async () => {
 export default function Step2() {
   return (
     <main>
-      <h1 className="text-4xl">Step 3</h1>
+      <h1 className="text-4xl">Step 2</h1>
       <ul className="p-2 gap-2 flex flex-col text-white">
         {Array.from({ length: 20 }).map((_, i) => {
           if (i === 6) {
@@ -20,9 +20,9 @@ export default function Step2() {
                   viewTransition
                   className="size-full flex justify-center items-center text-7xl"
                 >
-                  <span className="text-lg text-gray-500">zurück zu </span>
+                  <span className="text-lg text-gray-200">zurück zu </span>
                   1
-                  <span className="text-lg text-gray-500">{i + 1}</span>
+                  <span className="text-lg text-gray-200">{i + 1}</span>
                 </TransitionLink>
               </li>
             );

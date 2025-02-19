@@ -15,7 +15,7 @@ export default function Step1() {
             return (
               <li key={i} className="h-64 bg-gray-400 odd:bg-gray-300 rounded block">
                 <TransitionLink
-                  to={'-1'}
+                  to="/"
                   viewTransitionName="page-default-backward"
                   viewTransition
                   className="size-full flex justify-center items-center text-7xl"
