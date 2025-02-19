@@ -9,8 +9,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import TransitionContextProvider from '~/transition-context';
+import { isSafari } from '~/lib/is-safari';
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -26,60 +27,13 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
-  const currentIndex = useRef(0); // Track the current index
-  const transitionRef = useRef('');
   const htmlElementRef = useRef<HTMLHtmlElement>(null);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-  useLayoutEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const newIndex = event.state?.idx || 0;
-
-      if (transitionRef.current) {
-        htmlElementRef.current?.style.removeProperty("view-transition-name");
-      }
-      if (event.hasUAVisualTransition || isSafari) {
-        console.log('UA visual transition');
-        transitionRef.current = '';
-        htmlElementRef.current?.style.removeProperty("view-transition-name");
-      } else {
-        if (newIndex < currentIndex.current) {
-          console.log('Back navigation');
-          transitionRef.current = 'page-default-backward';
-        } else if (newIndex > currentIndex.current) {
-          console.log('Forward navigation');
-          transitionRef.current = 'page-default-forward';
-        }
-        htmlElementRef.current?.style.setProperty("view-transition-name", transitionRef.current);
-        document.startViewTransition();
-      }
-
-      // Update the current index
-      currentIndex.current = newIndex;
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [location]);
-
-  useLayoutEffect(() => {
-    currentIndex.current = history.state?.idx || 0;
-  }, [location]);
-
-  useEffect(() => {
-    history.scrollRestoration = isSafari ? "auto" : 'manual';
-  }, [location]);
 
   const setTransition = (value: string) => {
-    if (transitionRef.current) {
-      htmlElementRef.current?.style.removeProperty("view-transition-name");
+    htmlElementRef.current?.style.removeProperty("view-transition-name");
+    if (value) {
+      htmlElementRef.current?.style.setProperty("view-transition-name", value);
     }
-    htmlElementRef.current?.style.setProperty("view-transition-name", value);
-    transitionRef.current = value;
   }
 
   return (
@@ -91,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-      <TransitionContextProvider handler={setTransition}>
+      <TransitionContextProvider setViewTransitionPropertyHandler={setTransition}>
         {children}
       </TransitionContextProvider>
       {isSafari ? null : <ScrollRestoration />}

@@ -1,44 +1,66 @@
-import { Link, type LinkProps, useLinkClickHandler } from 'react-router';
+import { Link, type LinkProps, type To, useLinkClickHandler } from 'react-router';
 import { useTransitionContext } from '~/transition-context';
 import { type MouseEvent, useEffect, useState } from 'react';
+import { isSafari } from '~/lib/is-safari';
 
-export const TransitionLink = ({ children, onClick, to, viewTransition: viewTransitionProp, ...props }: LinkProps) => {
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+export const TransitionLink = ({
+ children,
+ onClick,
+ to: toProp,
+ viewTransition: viewTransitionProp,
+ viewTransitionName,
+ ...props
+}: LinkProps & { viewTransitionName?: string}) => {
   const context = useTransitionContext();
   const [withViewTransition, setWithViewTransition] = useState(
-    viewTransitionProp && !context?.hasUAVisualTransitionRef && Boolean(document.startViewTransition)
+    viewTransitionProp && !context?.hasUAVisualTransition && Boolean(document.startViewTransition)
   );
+  const to = toProp === '-1' ? -1 as To: toProp;
   const linkHandler = useLinkClickHandler(to, {
     viewTransition: false
   });
 
-  const onForwardNavigation = (e: MouseEvent<HTMLAnchorElement>) => {
+  if (!context?.isViewTransitionEnabled) {
+    return (
+      <Link
+        {...props}
+        onClick={onClick}
+        to={to}
+      >
+        {children}
+      </Link>
+    )
+  }
+
+  const onClickHandler = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    if (context === null || !withViewTransition) {
+    if (onClick) {
+      onClick(e);
+    }
+    if (context === null || !withViewTransition || !viewTransitionName) {
       linkHandler(e);
       return;
     }
-    context?.setTransition('page-default-forward');
+    context?.setTransition(viewTransitionName);
     document.startViewTransition(() => {
       linkHandler(e);
-      requestAnimationFrame(() => {
-        if (isSafari) {
+      if (isSafari) {
+        requestAnimationFrame(() => {
           window.scrollTo(0, 0);
-        }
-      })
+        })
+      }
     });
   };
 
   useEffect(() => {
-    setWithViewTransition(viewTransitionProp && !context?.hasUAVisualTransitionRef && Boolean(document.startViewTransition));
-  }, [viewTransitionProp, context?.hasUAVisualTransitionRef]);
+    setWithViewTransition(viewTransitionProp && !context?.hasUAVisualTransition && Boolean(document.startViewTransition));
+  }, [viewTransitionProp, context?.hasUAVisualTransition]);
 
   return (
     <Link
-      to={to}
       {...props}
-      onClick={onForwardNavigation}
-      prefetch={"viewport"}
+      onClick={onClickHandler}
+      to={to}
     >
       {children}
     </Link>);
