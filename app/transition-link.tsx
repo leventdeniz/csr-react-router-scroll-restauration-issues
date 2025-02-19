@@ -26,6 +26,7 @@ export const TransitionLink = ({
         {...props}
         onClick={onClick}
         to={to}
+        prefetch="viewport"
       >
         {children}
       </Link>
@@ -61,6 +62,7 @@ export const TransitionLink = ({
       {...props}
       onClick={onClickHandler}
       to={to}
+      prefetch="viewport"
     >
       {children}
     </Link>);
