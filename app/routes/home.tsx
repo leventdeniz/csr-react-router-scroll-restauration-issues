@@ -13,6 +13,7 @@ const StyledLink = ({ children, ...props }: LinkProps) => {
   return(
     <TransitionLink
       {...props}
+      viewTransitionName="page-default-forward"
       className="inline-block m-2 py-2 px-3 bg-blue-600 text-white rounded-lg"
     >
       {children}
@@ -40,15 +41,6 @@ export default function Home() {
           </StyledLink>
         </li>
       </ul>
-      <div className="mt-4">
-        Scroll Restoration:
-      </div>
-      <Link to={{ search: 'scrollRestoration=manual' }} className="inline-block m-2 py-2 px-3 bg-blue-600 text-white rounded-lg">
-        Manual
-      </Link>
-      <Link to={{ search: 'scrollRestoration=auto' }} className="inline-block m-2 py-2 px-3 bg-blue-600 text-white rounded-lg">
-        Auto
-      </Link>
     </main>
   );
 }
