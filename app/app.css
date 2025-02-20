@@ -89,17 +89,21 @@ body {
 
 ::view-transition-new(page-default-forward) {
   animation: 0.25s ease-in-out both push-move-in-from-right;
+  animation-delay: 20ms;
 }
 ::view-transition-old(page-default-forward) {
   animation: 0.25s ease-in-out both push-move-out-left;
+  animation-delay: 20ms;
 }
 
 ::view-transition-new(page-default-backward) {
   animation: 0.25s ease-in-out both pop-move-in-from-left;
+  animation-delay: 20ms;
   z-index: 1;
 }
 ::view-transition-old(page-default-backward) {
   animation: 0.25s ease-in-out both pop-move-out-right;
+  animation-delay: 20ms;
   z-index: 2;
 }
 
