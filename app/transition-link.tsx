@@ -13,11 +13,11 @@ export const TransitionLink = ({
 }: LinkProps & { viewTransitionName?: string}) => {
   const context = useTransitionContext();
   const [withViewTransition, setWithViewTransition] = useState(
-    viewTransitionProp && !context?.hasUAVisualTransition && Boolean(document.startViewTransition)
+    viewTransitionProp && !context?.hasUAVisualTransition && Boolean(document.startViewTransition),
   );
-  const to = toProp === '-1' ? -1 as To: toProp;
+  const to = toProp === '-1' ? -1 as To : toProp;
   const linkHandler = useLinkClickHandler(to, {
-    viewTransition: false
+    viewTransition: false,
   });
 
   if (!context?.isViewTransitionEnabled) {
@@ -30,7 +30,7 @@ export const TransitionLink = ({
       >
         {children}
       </Link>
-    )
+    );
   }
 
   const onClickHandler = (e: MouseEvent<HTMLAnchorElement>) => {
@@ -38,18 +38,30 @@ export const TransitionLink = ({
     if (onClick) {
       onClick(e);
     }
+
     if (context === null || !withViewTransition || !viewTransitionName) {
       linkHandler(e);
       return;
     }
+
+    if (typeof to === 'number' && to === -1) {
+      context.setManualHistoryEventTriggered(true);
+      context?.setTransition(viewTransitionName);
+      document.startViewTransition(() => history.back());
+      return;
+    }
+
     context?.setTransition(viewTransitionName);
-    document.startViewTransition(() => {
+    const transition = document.startViewTransition(() => {
       linkHandler(e);
       if (isSafari) {
         requestAnimationFrame(() => {
           window.scrollTo(0, 0);
-        })
+        });
       }
+    });
+    transition.updateCallbackDone.then(() => {
+      context?.setTransition('');
     });
   };
 
@@ -58,6 +70,7 @@ export const TransitionLink = ({
   }, [viewTransitionProp, context?.hasUAVisualTransition]);
 
   return (
+    // @ts-ignore
     <Link
       {...props}
       onClick={onClickHandler}

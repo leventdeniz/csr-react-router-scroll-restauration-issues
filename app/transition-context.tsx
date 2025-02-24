@@ -6,6 +6,7 @@ export const TransitionContext = React.createContext<({
   setTransition: (transition: string) => void;
   transition: string;
   hasUAVisualTransition: boolean;
+  setManualHistoryEventTriggered: (value: boolean) => void;
   isViewTransitionEnabled: boolean;
 }) | null>(null);
 
@@ -25,6 +26,13 @@ const TransitionContextProvider = ({
   const currentIndex = useRef(0);
   const transitionRef = useRef('');
   const [hasUAVisualTransition, setHasUAVisualTransition] = useState(false);
+  /*
+  * when invoking `window.history.back()` or `window.history.forward()`, the page instantly changes and then a
+  * popstate event is triggered. This leads to instant page change and then a transition. To prevent this, we need to
+  * set a flag to prevent the transition from happening here and instead trigger the transition during the
+  * window.history.back()/forward() callback: document.startViewTransition(() => history.back())
+  * */
+  const manualHistoryEventTriggered = useRef(false);
   const location = useLocation();
 
   const setTransition = (value: string) => {
@@ -37,8 +45,7 @@ const TransitionContextProvider = ({
     }
     const handlePopState = (event: PopStateEvent) => {
       const newIndex = event.state?.idx || 0;
-
-      if (event.hasUAVisualTransition || isSafari) {
+      if (manualHistoryEventTriggered.current || event.hasUAVisualTransition || isSafari) {
         requestAnimationFrame(() => {
           transitionRef.current = '';
           setViewTransitionPropertyHandler('');
@@ -50,9 +57,12 @@ const TransitionContextProvider = ({
           transitionRef.current = 'page-default-forward';
         }
         setViewTransitionPropertyHandler(transitionRef.current);
-        document.startViewTransition();
+        const transition = document.startViewTransition();
+        transition.finished.then(() => {
+          setViewTransitionPropertyHandler('');
+        });
       }
-
+      manualHistoryEventTriggered.current = false;
       currentIndex.current = newIndex;
     };
 
@@ -96,6 +106,9 @@ const TransitionContextProvider = ({
       transition: transitionRef.current,
       hasUAVisualTransition,
       isViewTransitionEnabled,
+      setManualHistoryEventTriggered: (value) => {
+        manualHistoryEventTriggered.current = value;
+      }
     }}>
       {children}
     </TransitionContext.Provider>
