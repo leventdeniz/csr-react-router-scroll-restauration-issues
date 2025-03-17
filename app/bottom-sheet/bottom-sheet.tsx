@@ -121,6 +121,7 @@ const useDragToDismiss = (
   draggableElementRef: React.RefObject<HTMLDivElement | null>,
   containerElementRef: React.RefObject<HTMLDivElement | null>,
   backgroundElementRef: React.RefObject<HTMLDivElement | null>,
+  contentElementRef: React.RefObject<HTMLDivElement | null>,
   isOpen: boolean,
   dismiss: () => void,
   options: { dismissDistancePercentage?: number, elasticDrag?: boolean, height?: string } = {},
@@ -131,7 +132,7 @@ const useDragToDismiss = (
   const isDragging = useRef(false);
 
   useEffect(() => {
-    if (!isOpen || !draggableElementRef.current || !containerElementRef.current || !backgroundElementRef.current || !componentElementRef.current) {
+    if (!isOpen || !draggableElementRef.current || !containerElementRef.current || !backgroundElementRef.current || !componentElementRef.current || !contentElementRef.current) {
       return;
     }
 
@@ -139,6 +140,7 @@ const useDragToDismiss = (
     const draggableElement: HTMLDivElement = draggableElementRef.current;
     const containerElement: HTMLDivElement = containerElementRef.current;
     const backgroundElement: HTMLDivElement = backgroundElementRef.current;
+    const contentElement: HTMLDivElement = contentElementRef.current;
 
     let moveDistance = 0; // used to determine if the user dragged the element far enough to dismiss it
     let moveDirection: 'none' | 'up' | 'down' = 'none';
@@ -266,11 +268,106 @@ const useDragToDismiss = (
       }
     }
 
-    eventHandler.registerEventHandler(draggableElement)
-    return () => {
-      eventHandler.unregisterEventHandler(draggableElement)
+    eventHandler.registerEventHandler(draggableElement);
+    
+    // Add event handlers for content element
+    const contentEventHandler = {
+      isAtTop: false,
+      
+      handleScroll: (event: Event) => {
+        const target = event.target as HTMLElement;
+
+        const isInteractiveElement = 
+          target.tagName === 'INPUT' || 
+          target.tagName === 'BUTTON' || 
+          target.tagName === 'SELECT' || 
+          target.tagName === 'TEXTAREA' || 
+          target.tagName === 'A' || 
+          target.hasAttribute('role') || 
+          target.contentEditable === 'true' ||
+          target.closest('button, a, input, select, textarea, [role="button"]') !== null;
+          
+        if (isInteractiveElement) {
+          return;
+        }
+      },
+      
+      handlePointerUp: () => {
+        // console.log('pointer up');
+        // contentEventHandler.isAtTop = false;
+      },
+
+      handlePointerMove: (event: Event) => {
+        const target = event.target as HTMLElement;
+        const isInteractiveElement = 
+          target.tagName === 'INPUT' || 
+          target.tagName === 'BUTTON' || 
+          target.tagName === 'SELECT' || 
+          target.tagName === 'TEXTAREA' || 
+          target.tagName === 'A' || 
+          target.hasAttribute('role') || 
+          target.contentEditable === 'true' ||
+          target.closest('button, a, input, select, textarea, [role="button"]') !== null;
+          
+        if (isInteractiveElement) {
+          return;
+        }
+
+        const pointerY = event instanceof TouchEvent
+        ? event.touches[0].clientY
+        : event instanceof MouseEvent
+          ? event.clientY : 0;
+        const contentElementScrollValue = contentElement.scrollTop || 0;
+
+        if (contentElementScrollValue <= 0) {
+           // prevents momentum scrolling
+           event.preventDefault();
+
+           if (!isDragging.current) {
+            console.log('start drag');
+            dragging.startDrag(pointerY);
+           }
+        }
+      },
+      
+      handleContentPointerDown: (event: Event) => {
+        return;
+      },
+      
+      registerContentEventHandler: (target: HTMLElement) => {
+        target.addEventListener('scroll', contentEventHandler.handleScroll);
+        ['mousedown', 'touchstart'].forEach(eventName => 
+          target.addEventListener(eventName, contentEventHandler.handleContentPointerDown, {passive: false})
+        );
+        ['mousemove', 'touchmove'].forEach(eventName => 
+          target.addEventListener(eventName, contentEventHandler.handlePointerMove, {passive: false,  capture: true})
+        );
+        ['mouseup', 'touchend'].forEach(eventName => 
+          document.addEventListener(eventName, contentEventHandler.handlePointerUp)
+        );
+      },
+      
+      unregisterContentEventHandler: (target: HTMLElement) => {
+        target.removeEventListener('scroll', contentEventHandler.handleScroll);
+        ['mousedown', 'touchstart'].forEach(eventName => 
+          target.removeEventListener(eventName, contentEventHandler.handleContentPointerDown)
+        );
+        ['mousemove', 'touchmove'].forEach(eventName => 
+          target.removeEventListener(eventName, contentEventHandler.handlePointerMove)
+        );
+        ['mouseup', 'touchend'].forEach(eventName => 
+          document.removeEventListener(eventName, contentEventHandler.handlePointerUp)
+        );
+      }
     };
-  }, [isOpen, dismiss, draggableElementRef, containerElementRef, backgroundElementRef, componentElementRef, options]);
+    
+    contentEventHandler.registerContentEventHandler(contentElement);
+
+    return () => {
+      eventHandler.unregisterEventHandler(draggableElement);
+      contentEventHandler.unregisterContentEventHandler(contentElement);
+    };
+  }, [isOpen, dismiss, draggableElementRef, containerElementRef, backgroundElementRef, componentElementRef, contentElementRef, options]);
 
   return containerClassName.current;
 };
@@ -297,6 +394,7 @@ const BottomSheet = ({ children, isOpen, onClose, height = '60vh' }: BottomSheet
     handleElementRef,
     containerElementRef,
     backgroundElementRef,
+    contentElementRef,
     isOpen,
     onClose,
     { elasticDrag: true },
@@ -307,7 +405,7 @@ const BottomSheet = ({ children, isOpen, onClose, height = '60vh' }: BottomSheet
 
   useEffect(() => {
     if (isOpen && contentElementRef) {
-      contentElementRef.current?.scrollTo(0, 0);
+      contentElementRef.current?.scrollTo(0, 1);
     }
   }, [isOpen]);
 
