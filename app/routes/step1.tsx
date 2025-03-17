@@ -13,7 +13,7 @@ const Step1BottomSheetWrapper = () => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className={`bg-blue-500 text-white p-2 rounded`}
+        className={`bg-blue-500 text-white p-2 rounded block m-2`}
       >
         Open Bottom Sheet
       </button>
@@ -45,9 +45,9 @@ const Step1ShortBottomSheetWrapper = () => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className={`bg-blue-500 text-white p-2 rounded`}
+        className={`bg-blue-500 text-white p-2 rounded block m-2`}
       >
-        Open Bottom Sheet
+        Open Short Bottom Sheet
       </button>
       <BottomSheet isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <div className="p-4">
@@ -55,6 +55,46 @@ const Step1ShortBottomSheetWrapper = () => {
           <p className="text-gray-500">This is a bottom sheet</p>
           <p className="text-gray-500">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed           
             </p>
+          <button
+            onClick={() => setIsOpen(false)}
+            className={`bg-blue-700 text-white p-2 rounded`}
+          >
+            close
+          </button>
+        </div>
+      </BottomSheet>
+    </>
+  );
+}
+
+const Step1InputBottomSheetWrapper = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className={`bg-blue-500 text-white p-2 rounded block m-2`}
+      >
+        Open Input Bottom Sheet
+      </button>
+      <BottomSheet isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <div className="p-4">
+          <h2 className="text-2xl">Bottom Sheet</h2>
+          <form action="#" onSubmit={(event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target as HTMLFormElement);
+            alert(`first-input: ${formData.get('top-input')} second-input: ${formData.get('bottom-input')}`);
+          }}>
+            <input name="top-input" type="text" className="border-2 border-gray-300 rounded-md p-2" placeholder="top input" />
+            <p className="text-gray-500">This is a bottom sheet</p>
+            <p className="text-gray-500">
+            diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum
+              dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et
+              justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+            </p>
+            <input name="bottom-input" type="text" className="border-2 border-gray-300 rounded-md p-2" placeholder="bottom input" />
+            <button type="submit" className="bg-blue-700 text-white p-2 rounded">Submit</button>
+          </form>
           <button
             onClick={() => setIsOpen(false)}
             className={`bg-blue-700 text-white p-2 rounded`}
@@ -79,6 +119,7 @@ export default function Step1() {
               <li>
                 <Step1BottomSheetWrapper />
                 <Step1ShortBottomSheetWrapper />
+                <Step1InputBottomSheetWrapper />
               </li>
             )
           }

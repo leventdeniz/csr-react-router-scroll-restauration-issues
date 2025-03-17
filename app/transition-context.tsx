@@ -45,11 +45,14 @@ const TransitionContextProvider = ({
     }
     const handlePopState = (event: PopStateEvent) => {
       const newIndex = event.state?.idx || 0;
-      if (manualHistoryEventTriggered.current || event.hasUAVisualTransition || isSafari) {
-        requestAnimationFrame(() => {
+      if (manualHistoryEventTriggered.current) {
+        transitionRef.current = '';
+        setViewTransitionPropertyHandler('');
+      } else if (event.hasUAVisualTransition || isSafari) {
+        // requestAnimationFrame(() => {
           transitionRef.current = '';
           setViewTransitionPropertyHandler('');
-        })
+        // })
       } else {
         if (newIndex < currentIndex.current) {
           transitionRef.current = 'page-default-backward';
