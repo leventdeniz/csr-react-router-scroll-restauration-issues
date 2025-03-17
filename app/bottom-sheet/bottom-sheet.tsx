@@ -272,7 +272,7 @@ const useDragToDismiss = (
     
     // Add event handlers for content element
     const contentEventHandler = {
-      isAtTop: false,
+      pointerStartY: 0,
       
       handleScroll: (event: Event) => {
         const target = event.target as HTMLElement;
@@ -293,8 +293,9 @@ const useDragToDismiss = (
       },
       
       handlePointerUp: () => {
-        // console.log('pointer up');
-        // contentEventHandler.isAtTop = false;
+        contentEventHandler.pointerStartY = 0;
+        contentElement.style.removeProperty('overflow');
+        return;
       },
 
       handlePointerMove: (event: Event) => {
@@ -318,24 +319,34 @@ const useDragToDismiss = (
         : event instanceof MouseEvent
           ? event.clientY : 0;
         const contentElementScrollValue = contentElement.scrollTop || 0;
+        const pointerDelta = Math.abs(pointerY - contentEventHandler.pointerStartY);
+        const isScrollingDown = pointerY > contentEventHandler.pointerStartY;
 
-        if (contentElementScrollValue <= 0) {
+        console.log(pointerDelta, isScrollingDown, 'pointer move');
+
+        if (contentElementScrollValue <= 0 && isScrollingDown && pointerDelta > 10) {
            // prevents momentum scrolling
            event.preventDefault();
 
            if (!isDragging.current) {
             console.log('start drag');
             dragging.startDrag(pointerY);
+            contentElement.style.setProperty('overflow', 'hidden');
            }
         }
       },
       
       handleContentPointerDown: (event: Event) => {
+        const pointerY = event instanceof TouchEvent
+        ? event.touches[0].clientY
+        : event instanceof MouseEvent
+          ? event.clientY : 0;
+        contentEventHandler.pointerStartY = pointerY;
         return;
       },
       
       registerContentEventHandler: (target: HTMLElement) => {
-        target.addEventListener('scroll', contentEventHandler.handleScroll);
+        target.addEventListener('scroll', contentEventHandler.handleScroll, {passive: false, capture: true});
         ['mousedown', 'touchstart'].forEach(eventName => 
           target.addEventListener(eventName, contentEventHandler.handleContentPointerDown, {passive: false})
         );
