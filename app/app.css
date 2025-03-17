@@ -7,6 +7,14 @@ body {
   @apply bg-white;
 }
 
+* {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 body {
   margin: 0;
   overflow-x: hidden;

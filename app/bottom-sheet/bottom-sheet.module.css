@@ -1,0 +1,89 @@
+.bottomSheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: visibility .3s ease;
+  visibility: hidden;
+
+  &.isUserInteracting {
+    & .handle::before {
+      background: #aaa;
+      width: 80px;
+    }
+  }
+  &:not(.isUserInteracting) {
+    & .background {
+      transition: opacity 0.3s ease;
+    }
+
+    & .content {
+      transition: transform 0.3s ease;
+    }
+  }
+
+  &.open {
+    visibility: visible;
+
+    & .background {
+      opacity: 1;
+    }
+    & .content {
+      transform: translateY(0);
+    }
+  }
+
+  .background {
+    position: fixed;
+    inset: 0;
+    background-color: #0008;
+    opacity: 0;
+  }
+
+  .content {
+    position: relative;
+    background: white;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    flex-direction: column;
+    display: flex;
+    flex-flow: column;
+    /* max-height: 60vh; */
+    /* height: 60vh; */
+    height: inherit;
+    transform: translateY(100%);
+  }
+
+  .handle {
+    position: relative;
+    width: 100%;
+    height: 30px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 5px;
+      background-color: #ddd;
+      border-radius: 5px;
+      z-index: 10;
+      transition: background-color 0.2s ease, width 0.2s ease;
+    }
+  }
+}
+
+.debug {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: #d15bff;
+  border: 1px solid #b700ff;
+  z-index: 1000;
+}
