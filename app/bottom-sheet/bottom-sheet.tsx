@@ -129,7 +129,7 @@ const useDragToDismiss = (
   isOpen: boolean,
   dismiss: () => void,
   options: { dismissDistancePercentage?: number, elasticDrag?: boolean, height?: string } = {},
-  debugElementRef: React.RefObject<HTMLDivElement | null>
+  debugElementRef?: React.RefObject<HTMLDivElement | null>
 ): string => {
   const pointerStartY = useRef(0);
   const containerClassName = useRef('');
@@ -153,7 +153,6 @@ const useDragToDismiss = (
     isDragging.current = false;
     let containerHeight = containerElement.clientHeight;
 
-
     const settings = {
       ...{dismissDistancePercentage: 20, elasticDrag: false, height: '60vh'},
       ...options
@@ -163,70 +162,60 @@ const useDragToDismiss = (
 
     let dismissDistance = containerHeight * (settings.dismissDistancePercentage / 100);
 
+    const isInteractiveElement = (target: HTMLElement) => 
+      target.tagName === 'INPUT' ||
+      target.tagName === 'BUTTON' ||
+      target.tagName === 'SELECT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'A' ||
+      target.hasAttribute('role') ||
+      target.contentEditable === 'true' ||
+      target.closest('button, a, input, select, textarea, [role="button"]') !== null;
+
     const eventHandler = {
       registerEventHandler: (target: HTMLElement) => {
-        // we add the starting eventlistener right on the handle but the move and end listener on the documnet
-        // this way we can ensure that we can still drag the element even if the pointer leaves the handle
-        ['mousedown', 'touchstart'].forEach(eventName => target.addEventListener(eventName, eventHandler.handlePointerDown, {passive: false}));
-        ['mousemove', 'touchmove'].forEach(eventName => document.addEventListener(eventName, eventHandler.handlePointerMove, {
-          passive: false,
-          capture: true
-        }));
-        ['mouseup', 'touchend'].forEach(eventName => document.addEventListener(eventName, eventHandler.handlePointerUp));
+        ['mousedown', 'touchstart'].forEach(eventName => 
+          target.addEventListener(eventName, eventHandler.handlePointerDown, {passive: false})
+        );
+        ['mousemove', 'touchmove'].forEach(eventName => 
+          document.addEventListener(eventName, eventHandler.handlePointerMove, {passive: false, capture: true})
+        );
+        ['mouseup', 'touchend'].forEach(eventName => 
+          document.addEventListener(eventName, eventHandler.handlePointerUp)
+        );
       },
       unregisterEventHandler: (target: HTMLElement) => {
-        ['mousedown', 'touchstart'].forEach(eventName => target.removeEventListener(eventName, eventHandler.handlePointerDown));
-        ['mousemove', 'touchmove'].forEach(eventName => document.removeEventListener(eventName, eventHandler.handlePointerMove, {capture: true}));
-        ['mouseup', 'touchend'].forEach(eventName => document.removeEventListener(eventName, eventHandler.handlePointerUp));
+        ['mousedown', 'touchstart'].forEach(eventName => 
+          target.removeEventListener(eventName, eventHandler.handlePointerDown)
+        );
+        ['mousemove', 'touchmove'].forEach(eventName => 
+          document.removeEventListener(eventName, eventHandler.handlePointerMove, {capture: true})
+        );
+        ['mouseup', 'touchend'].forEach(eventName => 
+          document.removeEventListener(eventName, eventHandler.handlePointerUp)
+        );
       },
       handlePointerDown: (event: Event) => {
         const target = event.target as HTMLElement;
-        const isInteractiveElement =
-          target.tagName === 'INPUT' ||
-          target.tagName === 'BUTTON' ||
-          target.tagName === 'SELECT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'A' ||
-          target.hasAttribute('role') ||
-          target.contentEditable === 'true' ||
-          target.closest('button, a, input, select, textarea, [role="button"]') !== null;
-
-        if (isInteractiveElement) {
-          return;
-        }
+        if (isInteractiveElement(target)) return;
+        
         const contentElementScrollValue = contentElement.scrollTop || 0;
-        if(contentElementScrollValue > 0) {
-          return;
-        }
+        if(contentElementScrollValue > 0) return;
         // prevents momentum scrolling
         event.preventDefault();
 
-        const pointerY = event instanceof TouchEvent
-                         ? event.touches[0].clientY
-                         : event instanceof MouseEvent
-                           ? event.clientY : 0;
+        const pointerY = 
+        event instanceof TouchEvent
+        ? event.touches[0].clientY
+        : event instanceof MouseEvent
+          ? event.clientY : 0;
 
         dragging.startDrag(pointerY);
-        if(debugElementRef.current) {
-          debugElementRef.current.innerHTML = `${moveDistance.toFixed(2)}`;
-          debugElementRef.current.innerHTML += `\n${dismissDistance.toFixed(2)}`;
-        }
+        updateDebugInfo();
       },
       handlePointerMove: (event: Event) => {
         const target = event.target as HTMLElement;
-        const isInteractiveElement =
-          target.tagName === 'INPUT' ||
-          target.tagName === 'BUTTON' ||
-          target.tagName === 'SELECT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'A' ||
-          target.hasAttribute('role') ||
-          target.contentEditable === 'true' ||
-          target.closest('button, a, input, select, textarea, [role="button"]') !== null;
-
-        if (isInteractiveElement || !isDragging.current) {
-          return;
-        }
+        if (isInteractiveElement(target) || !isDragging.current) return;
 
         const clientY =
           event instanceof TouchEvent
@@ -234,11 +223,9 @@ const useDragToDismiss = (
           : event instanceof MouseEvent
             ? event.clientY : 0;
 
-        const contentElementScrollValue = contentElement.scrollTop || 0;
-        const isScrollingDown = clientY > pointerStartY.current;
-
         // If scrolling up or not at top, allow normal scrolling
-        if (/* !isScrollingDown ||  */contentElementScrollValue > 0) {
+        const contentElementScrollValue = contentElement.scrollTop || 0;
+        if (contentElementScrollValue > 0) {  
           contentElement.style.removeProperty('overflow');
           return;
         }
@@ -247,21 +234,14 @@ const useDragToDismiss = (
         event.preventDefault();
         dragging.moveDrag(clientY);
         contentElement.style.setProperty('overflow', 'hidden');
-
-        if(debugElementRef.current){
-          debugElementRef.current.innerHTML = `${moveDistance.toFixed(2)}`;
-          debugElementRef.current.innerHTML += `\n${dismissDistance.toFixed(2)}`;
-        }
+        updateDebugInfo();
       },
       handlePointerUp: () => {
         if (!isDragging.current) return;
         contentElement.style.removeProperty('overflow');
         contentElement.scrollTo(0, 1);
         dragging.endDrag();
-        if(debugElementRef.current){
-          debugElementRef.current.innerHTML = `${moveDistance.toFixed(2)}`;
-          debugElementRef.current.innerHTML += `\n${dismissDistance.toFixed(2)}`;
-        }
+        updateDebugInfo();
         if (moveDistance <= dismissDistance || moveDirection === 'up') return;
         dismiss();
       }
@@ -283,7 +263,7 @@ const useDragToDismiss = (
         } else {
           moveDistance = Math.max(0, clientY - pointerStartY.current)
         }
-
+        
         moveDirection = clientY > pointerPreviousY ? 'down' : 'up';
         pointerPreviousY = clientY;
         if(moveDistance > 0){
@@ -315,6 +295,12 @@ const useDragToDismiss = (
           return;
         }
         backgroundElement.style.opacity = `${opacity}`;
+      }
+    }
+
+    const updateDebugInfo = () => {
+      if(debugElementRef?.current){
+        debugElementRef.current.innerHTML = `${moveDistance.toFixed(2)}\n${dismissDistance.toFixed(2)}`;
       }
     }
 
@@ -354,7 +340,6 @@ const BottomSheet = ({ children, isOpen, onClose, height = '60vh' }: BottomSheet
     isOpen,
     onClose,
     { elasticDrag: true },
-    debugElementRef
   );
 
   usePreventBackgroundScrolling(isOpen, contentElementRef);
@@ -372,7 +357,6 @@ const BottomSheet = ({ children, isOpen, onClose, height = '60vh' }: BottomSheet
         className={styles.background}
         ref={backgroundElementRef}
       />
-
       <div
         className={[styles.content].join(' ')}
         ref={containerElementRef}
