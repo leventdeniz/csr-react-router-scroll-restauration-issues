@@ -11,7 +11,6 @@ import "./app.css";
 import React, { useRef } from 'react';
 import TransitionContextProvider from '~/transition-context';
 import { isSafari } from '~/lib/is-safari';
-import { scan } from 'react-scan';
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -26,7 +25,6 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-scan({enabled: true});
 export function Layout({ children }: { children: React.ReactNode }) {
   const htmlElementRef = useRef<HTMLHtmlElement>(null);
 

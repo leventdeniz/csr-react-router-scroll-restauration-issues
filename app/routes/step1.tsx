@@ -114,9 +114,9 @@ export default function Step1() {
       <h1 className="text-4xl">Step 1</h1>
       <ul className="p-2 gap-2 flex flex-col">
         {Array.from({ length: 30 }).map((_, i) => {
-          if (i === 3) {
+          if (i === 2) {
             return (
-              <li>
+              <li key={i}>
                 <Step1BottomSheetWrapper />
                 <Step1ShortBottomSheetWrapper />
                 <Step1InputBottomSheetWrapper />
