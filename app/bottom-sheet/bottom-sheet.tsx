@@ -190,6 +190,10 @@ const useDragToDismiss = (
         if (isInteractiveElement) {
           return;
         }
+        const contentElementScrollValue = contentElement.scrollTop || 0;
+        if(contentElementScrollValue > 0) {
+          return;
+        }
         // prevents momentum scrolling
         event.preventDefault();
 
@@ -246,8 +250,9 @@ const useDragToDismiss = (
         }
       },
       handlePointerUp: () => {
-        contentElement.style.removeProperty('overflow');
         if (!isDragging.current) return;
+        contentElement.style.removeProperty('overflow');
+        contentElement.scrollTo(0, 1);
         dragging.endDrag();
         if(debugElementRef.current){
           debugElementRef.current.innerHTML = `${moveDistance}`;
@@ -352,7 +357,7 @@ const BottomSheet = ({ children, isOpen, onClose, height = '60vh' }: BottomSheet
 
   useEffect(() => {
     if (isOpen && contentElementRef) {
-      contentElementRef.current?.scrollTo(0, 0);
+      contentElementRef.current?.scrollTo(0, 1);
     }
   }, [isOpen]);
 
