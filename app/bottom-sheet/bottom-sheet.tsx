@@ -13,25 +13,25 @@ const useBackgroundTapToDismiss = (
 
     registerEventListener(backgroundElement);
 
-    function handlePointerDown(event: PointerEvent) {
-      event.preventDefault();
-      event.stopPropagation();
-      pointerStart.x = event.clientX;
-      pointerStart.y = event.clientY;
+    function handlePointerDown(event: PointerEvent | TouchEvent | MouseEvent) {
+      pointerStart.x = event instanceof TouchEvent ? event.touches[0].clientX : event.clientX;
+      pointerStart.y = event instanceof TouchEvent ? event.touches[0].clientY : event.clientY;
     }
 
     function handlePointerMove(event: Event) {
-      event.preventDefault();
-      event.stopPropagation();
     }
 
-    function handlePointerUp(event: PointerEvent) {
+    function handlePointerUp(event: PointerEvent | TouchEvent | MouseEvent) {
       if (pointerStart.x === undefined || pointerStart.y === undefined) return;
-      const pointerEnd = {x: event.clientX, y: event.clientY};
+      const pointerEnd = {
+        x: event instanceof TouchEvent ? event.changedTouches[0].clientX : event.clientX,
+        y: event instanceof TouchEvent ? event.changedTouches[0].clientY : event.clientY
+      };
       const pointerDelta = {
         x: Math.abs(pointerEnd.x - pointerStart.x || 0),
         y: Math.abs(pointerEnd.y - pointerStart.y || 0)
       };
+
       const didMove = pointerDelta.x > 5 || pointerDelta.y > 5;
       if (didMove) {
         return;
@@ -40,19 +40,23 @@ const useBackgroundTapToDismiss = (
     }
 
     function registerEventListener(target: HTMLElement) {
-      target.addEventListener("pointerdown", handlePointerDown, {passive: false});
+      ['mousedown', 'touchstart'].forEach(eventName => {
+        target.addEventListener(eventName, handlePointerDown as unknown as EventListener, {passive: false});
+      });
       ['mousemove', 'touchmove'].forEach(eventName => {
         target.addEventListener(eventName, handlePointerMove, {passive: false});
       });
-      target.addEventListener("pointerup", handlePointerUp);
+      target.addEventListener("pointerup", handlePointerUp as unknown as EventListener);
     }
 
     function unregisterEventListener(target: HTMLElement) {
-      target.removeEventListener("pointerdown", handlePointerDown);
+      ['mousedown', 'touchstart'].forEach(eventName => {
+        target.removeEventListener(eventName, handlePointerDown as unknown as EventListener);
+      });
       ['mousemove', 'touchmove'].forEach(eventName => {
         target.removeEventListener(eventName, handlePointerMove);
       });
-      target.removeEventListener("pointerup", handlePointerUp);
+      target.removeEventListener("pointerup", handlePointerUp as unknown as EventListener);
     }
 
     return () => {
@@ -177,16 +181,16 @@ const useDragToDismiss = (
       },
       handlePointerDown: (event: Event) => {
         const target = event.target as HTMLElement;
-        const isInteractiveElement = 
-          target.tagName === 'INPUT' || 
-          target.tagName === 'BUTTON' || 
-          target.tagName === 'SELECT' || 
-          target.tagName === 'TEXTAREA' || 
-          target.tagName === 'A' || 
-          target.hasAttribute('role') || 
+        const isInteractiveElement =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'BUTTON' ||
+          target.tagName === 'SELECT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'A' ||
+          target.hasAttribute('role') ||
           target.contentEditable === 'true' ||
           target.closest('button, a, input, select, textarea, [role="button"]') !== null;
-          
+
         if (isInteractiveElement) {
           return;
         }
@@ -203,23 +207,23 @@ const useDragToDismiss = (
                            ? event.clientY : 0;
 
         dragging.startDrag(pointerY);
-        if(debugElementRef.current){
-          debugElementRef.current.innerHTML = `${moveDistance}`;
-          debugElementRef.current.innerHTML += `\n${dismissDistance}`;
+        if(debugElementRef.current) {
+          debugElementRef.current.innerHTML = `${moveDistance.toFixed(2)}`;
+          debugElementRef.current.innerHTML += `\n${dismissDistance.toFixed(2)}`;
         }
       },
       handlePointerMove: (event: Event) => {
         const target = event.target as HTMLElement;
-        const isInteractiveElement = 
-          target.tagName === 'INPUT' || 
-          target.tagName === 'BUTTON' || 
-          target.tagName === 'SELECT' || 
-          target.tagName === 'TEXTAREA' || 
-          target.tagName === 'A' || 
-          target.hasAttribute('role') || 
+        const isInteractiveElement =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'BUTTON' ||
+          target.tagName === 'SELECT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'A' ||
+          target.hasAttribute('role') ||
           target.contentEditable === 'true' ||
           target.closest('button, a, input, select, textarea, [role="button"]') !== null;
-          
+
         if (isInteractiveElement || !isDragging.current) {
           return;
         }
@@ -243,10 +247,10 @@ const useDragToDismiss = (
         event.preventDefault();
         dragging.moveDrag(clientY);
         contentElement.style.setProperty('overflow', 'hidden');
-            
+
         if(debugElementRef.current){
-          debugElementRef.current.innerHTML = `${moveDistance}`;
-          debugElementRef.current.innerHTML += `\n${dismissDistance}`;
+          debugElementRef.current.innerHTML = `${moveDistance.toFixed(2)}`;
+          debugElementRef.current.innerHTML += `\n${dismissDistance.toFixed(2)}`;
         }
       },
       handlePointerUp: () => {
@@ -255,8 +259,8 @@ const useDragToDismiss = (
         contentElement.scrollTo(0, 1);
         dragging.endDrag();
         if(debugElementRef.current){
-          debugElementRef.current.innerHTML = `${moveDistance}`;
-          debugElementRef.current.innerHTML += `\n${dismissDistance}`;
+          debugElementRef.current.innerHTML = `${moveDistance.toFixed(2)}`;
+          debugElementRef.current.innerHTML += `\n${dismissDistance.toFixed(2)}`;
         }
         if (moveDistance <= dismissDistance || moveDirection === 'up') return;
         dismiss();
@@ -279,7 +283,7 @@ const useDragToDismiss = (
         } else {
           moveDistance = Math.max(0, clientY - pointerStartY.current)
         }
-        
+
         moveDirection = clientY > pointerPreviousY ? 'down' : 'up';
         pointerPreviousY = clientY;
         if(moveDistance > 0){
@@ -343,7 +347,7 @@ const BottomSheet = ({ children, isOpen, onClose, height = '60vh' }: BottomSheet
 
   const transitioningClassName = useDragToDismiss(
     componentElementRef,
-    containerElementRef,
+    componentElementRef,
     containerElementRef,
     backgroundElementRef,
     contentElementRef,
@@ -369,7 +373,7 @@ const BottomSheet = ({ children, isOpen, onClose, height = '60vh' }: BottomSheet
         ref={backgroundElementRef}
       />
 
-      <div 
+      <div
         className={[styles.content].join(' ')}
         ref={containerElementRef}
         style={{ maxHeight: height }}
